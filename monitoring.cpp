@@ -2,7 +2,7 @@
  * SISTEM MONITORING & KONTROL SMART HOME BERBASIS IOT
  * ---------------------------------------------------
  * Platform : ESP32
- * Protocol : MQTT (Paho/Mosquitto) & HTTP (Laravel)
+ * Protocol : MQTT (Mosquitto) & HTTP (Laravel)
  */
 
 #include <WiFi.h>
@@ -68,7 +68,7 @@ int   CONFIG_BATAS_JARAK = 15;
 // Status
 bool doorIsOpen = false;
 bool fanIsOn = false;
-String manualDoorState = "NONE"; // NONE = Otomatis
+String manualDoorState = "NONE";
 int fanSpeedLevel = 0;
 int currentFanSpeedRPM = 10;
 
@@ -110,7 +110,6 @@ void reconnectMQTT() {
       client.subscribe(TOPIC_CONFIG);
       client.subscribe(TOPIC_KIPAS_SPEED);
       
-      // Minta Config Terakhir (Sync)
       client.publish(TOPIC_REQ_CONFIG, "sync");
     } else {
       Serial.print("Gagal rc="); Serial.print(client.state()); delay(5000);
@@ -122,7 +121,6 @@ void reconnectMQTT() {
 // 6. SENSOR & PUBLISH
 // ==========================================
 void readUltrasonic() {
-  // Baca tiap 200ms (Non-Blocking)
   if (millis() - lastDistRead > 200) {
     lastDistRead = millis();
     digitalWrite(TRIGPIN, LOW); delayMicroseconds(2);
@@ -176,7 +174,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     } else if (msg == "TUTUP") { 
         myServo.write(0); doorIsOpen = false; manualDoorState = "MANUAL_CLOSED"; 
     } else if (msg == "AUTO") { 
-        manualDoorState = "NONE"; // Reset ke Otomatis
+        manualDoorState = "NONE";
         Serial.println("🔄 Mode: Kembali ke OTOMATIS");
     }
     publishDoorStatus();
@@ -204,7 +202,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     const char* o = doc["open"]; const char* c = doc["close"];
     sscanf(o, "%d:%d", &openHour, &openMinute);
     sscanf(c, "%d:%d", &closeHour, &closeMinute);
-    manualDoorState = "NONE"; // Reset ke otomatis jika jadwal baru
+    manualDoorState = "NONE";
     Serial.println("✅ Jadwal Diperbarui");
   }
 }
@@ -213,12 +211,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
 // 8. LOGIKA OTOMATIS
 // ==========================================
 void logicPintu() {
-  if (manualDoorState != "NONE") return; // Jika manual, skip otomatis
+  if (manualDoorState != "NONE") return;
 
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo)) return;
 
-  // Hitung menit total agar presisi
   int timeNow = (timeinfo.tm_hour * 60) + timeinfo.tm_min;
   int timeOpen = (openHour * 60) + openMinute;
   int timeClose = (closeHour * 60) + closeMinute;
@@ -286,7 +283,7 @@ void loop() {
   if (!client.connected()) reconnectMQTT();
   client.loop();
 
-  readUltrasonic(); // Baca sensor (Penting!)
+  readUltrasonic();
   logicPintu();
   logicKipas();
 
