@@ -5,13 +5,13 @@ Sistem Smart Home terintegrasi yang menggabungkan efisiensi **Internet of Things
 
 ## 📸 Tampilan Sistem
 
-| Dashboard Sebelum Login | Dashboard Utama (Setelah Login) |
+| Dashboard Utama (Setelah Login) |
 | :---: | :---: |
-| ![Login](images/Dashboard_Sebelum_Login.png) | ![Dashboard1](images/Dashboard_Setelah_Login1.png) |
+| ![Dashboard1](images/Dashboard_Setelah_Login1.png) | ![Dashboard2](images/Dashboard_Setelah_Login2.png) |
 
-| Dashboard Utama (Setelah Login) | Rangkaian Hardware |
+| Dashboard Sebelum Login | Rangkaian Hardware |
 | :---: | :---: |
-| ![Dashboard2](images/Dashboard_Setelah_Login2.png) | ![Rangkaian](images/Rangkaian.png) |
+| ![Login](images/Dashboard_Sebelum_Login.png) | ![Rangkaian](images/Rangkaian.png) |
 
 
 ## 🌟 Fitur Utama
