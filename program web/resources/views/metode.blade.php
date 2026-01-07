@@ -25,8 +25,15 @@
             border-radius: 8px !important;
         }
         
-        .hover-text-white:hover { color: #fff !important; transition: 0.3s; }
-        .hover-text-primary:hover { color: #0d6efd !important; transition: 0.3s; }
+        .hover-text-white:hover { 
+            color: #fff !important; 
+            transition: 0.3s; 
+        }
+
+        .hover-text-primary:hover { 
+            color: #0d6efd !important; 
+            transition: 0.3s; 
+        }
     </style>
 </head>
 

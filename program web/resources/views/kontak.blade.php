@@ -28,10 +28,20 @@
         }
 
         /* Efek Hover Link */
-        .social-link { transition: transform 0.2s; }
-        .social-link:hover { transform: translateX(5px); }
-        .hover-text-white:hover { color: #fff !important; transition: 0.3s; }
-        .hover-text-primary:hover { color: #0d6efd !important; transition: 0.3s; }
+        .social-link { 
+            transition: transform 0.2s; 
+        }
+        .social-link:hover { 
+            transform: translateX(5px); 
+        }
+        .hover-text-white:hover { 
+            color: #fff !important; 
+            transition: 0.3s; 
+        }
+        .hover-text-primary:hover { 
+            color: #0d6efd !important; 
+            transition: 0.3s; 
+        }
     </style>
 </head>
 

@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('sensor_logs', function (Blueprint $table) {
             $table->id();
-            $table->float('temperature');       // Suhu (DHT11/BMP280)
-            $table->float('humidity');          // Kelembapan (DHT11)
-            $table->float('pressure');          // Tekanan (BMP280)
-            $table->float('altitude');          // Ketinggian (BMP280)
-            $table->float('door_distance');     // Jarak Ultrasonik
+            $table->float('temperature');       
+            $table->float('humidity');          
+            $table->float('pressure');          
+            $table->float('altitude');          
+            $table->float('door_distance');     
             $table->timestamps();             
         });
     }

@@ -5,23 +5,26 @@ namespace App\Http\Controllers;
 use App\Models\ActuatorLog;
 use Illuminate\Http\Request;
 use App\Models\Configuration;
+use PhpMqtt\Client\MqttClient;
+use PhpMqtt\Client\ConnectionSettings;
 
 class DashboardController extends Controller
 {
-    public function index(){
-        // 1. Ambil 10 Riwayat Aktivitas Terakhir (Log Pintu/Kipas)
-        // Urutkan dari yang terbaru (latest)
+    /**
+     * Menampilkan halaman dashboard utama.
+     * Memuat log aktivitas terakhir dan konfigurasi sistem saat ini.
+     */
+    public function index()
+    {
         $logs = ActuatorLog::latest()->take(10)->get();
-
-        // 2. Ambil Konfigurasi Terakhir (Untuk mengisi form input otomatis)
         $config = Configuration::first();
 
-        // 3. Kirim data ke View 'dashboard'
         return view('tampilan', compact('logs', 'config'));
     }
 
-    // Di dalam DashboardController.php
-
+    /**
+     * Memperbarui jadwal operasional pintu dan sinkronisasi ke MQTT.
+     */
     public function updateSchedule(Request $request)
     {
         $request->validate([
@@ -29,9 +32,11 @@ class DashboardController extends Controller
             'close_time' => 'required',
         ]);
 
-        // Simpan ke DB
+        // Simpan konfigurasi jadwal ke database
         $config = Configuration::first();
-        if (!$config) $config = new Configuration();
+        if (!$config) {
+            $config = new Configuration();
+        }
         $config->schedule_open = $request->open_time;
         $config->schedule_close = $request->close_time;
         $config->save();
@@ -42,19 +47,16 @@ class DashboardController extends Controller
                 'close' => $request->close_time
             ];
             
-            // Ganti 127.0.0.1 menjadi IP Laptop yang terdaftar di Mosquitto
-            $server   = '10.89.124.94'; 
-            $port     = 1883;
-            
-            // Gunakan Client ID Unik
+            // Mengambil kredensial dari file .env
+            $server   = env('MQTT_HOST', '127.0.0.1');
+            $port     = env('MQTT_PORT', 1883);
             $clientId = 'Laravel-Schedule-Sender-' . uniqid();
 
-            $mqtt = new \PhpMqtt\Client\MqttClient($server, $port, $clientId);
+            $mqtt = new MqttClient($server, $port, $clientId);
             
-            // Masukkan Username & Password (Wajib karena allow_anonymous false)
-            $connectionSettings = (new \PhpMqtt\Client\ConnectionSettings)
-                ->setUsername('AdminMQTT')
-                ->setPassword('pwd123');
+            $connectionSettings = (new ConnectionSettings)
+                ->setUsername(env('MQTT_USERNAME'))
+                ->setPassword(env('MQTT_PASSWORD'));
 
             $mqtt->connect($connectionSettings, true);
             
@@ -68,21 +70,21 @@ class DashboardController extends Controller
             
             return redirect()->back()->with('success', 'Jadwal berhasil diperbarui!');
         } catch (\Exception $e) {
-            // Tampilkan error jika gagal
             return redirect()->back()->with('error', 'Error MQTT: ' . $e->getMessage());
         }
     }
 
-    // LAKUKAN HAL YANG SAMA UNTUK FUNGSI updateConfig JUGA!
+    /**
+     * Memperbarui parameter batas suhu dan jarak, serta sinkronisasi ke MQTT.
+     */
     public function updateConfig(Request $request)
     {
-        // 1. Validasi Input
         $request->validate([
             'fan_temp_threshold' => 'required|numeric',
             'door_dist_threshold' => 'required|numeric',
         ]);
 
-        // 2. Simpan ke Database (MySQL)
+        // Simpan konfigurasi threshold ke database
         $config = Configuration::first(); 
         if (!$config) {
             $config = new Configuration();
@@ -92,32 +94,31 @@ class DashboardController extends Controller
         $config->door_dist_threshold = $request->door_dist_threshold;
         $config->save();
 
-        // 3. Definisikan Data yang mau dikirim
+        // Data payload untuk dikirim ke perangkat IoT
         $mqttData = [
             'batas_suhu' => (float) $request->fan_temp_threshold,
             'batas_jarak' => (float) $request->door_dist_threshold
         ];
 
-        // 4. Kirim ke ESP32 via MQTT
         try {
-            $server   = '10.89.124.94';
-            $port     = 1883;
+            // Mengambil kredensial dari file .env
+            $server   = env('MQTT_HOST', '127.0.0.1');
+            $port     = env('MQTT_PORT', 1883);
             $clientId = 'Laravel-Config-Sender-' . uniqid();
 
-            $mqtt = new \PhpMqtt\Client\MqttClient($server, $port, $clientId);
+            $mqtt = new MqttClient($server, $port, $clientId);
             
-            $connectionSettings = (new \PhpMqtt\Client\ConnectionSettings)
-                ->setUsername('AdminMQTT')
-                ->setPassword('pwd123');
+            $connectionSettings = (new ConnectionSettings)
+                ->setUsername(env('MQTT_USERNAME'))
+                ->setPassword(env('MQTT_PASSWORD'));
 
             $mqtt->connect($connectionSettings, true);
             
-            // Publish ke topik config
             $mqtt->publish(
                 'sistem_monitoring_control_automation/config', 
-                json_encode($mqttData), // <-- Variabel ini sekarang sudah ada isinya
+                json_encode($mqttData), 
                 0, 
-                true // Retain message
+                true
             );
             $mqtt->disconnect();
             
